@@ -27,7 +27,9 @@ const SnippetsPage = () => {
   // Fetch snippets from the server
   const fetchSnippets = async () => {
     try {
-      const response = await axios.get(`/api/v1/snippet/getall`);
+      const response = await axios.get(
+        `http://localhost:3000/api/v1/snippet/getall`
+      );
       const data = await response?.data;
       setSnippets(data);
       dispatch(addSnippets(data));
@@ -133,7 +135,7 @@ const SnippetsPage = () => {
               <span className="text-sm text-gray-400">Languages:</span>
             </div>
 
-            {popularLanguages.map((lang) => (
+            {popularLanguages?.map((lang) => (
               <button
                 key={lang}
                 onClick={() =>
@@ -211,7 +213,7 @@ const SnippetsPage = () => {
           layout
         >
           <AnimatePresence mode="popLayout">
-            {filteredSnippets.map((snippet) => (
+            {filteredSnippets?.map((snippet) => (
               <SnippetCard
                 key={snippet?._id}
                 snippet={snippet}

@@ -3,19 +3,19 @@ import { Blocks, Code2, Sparkles } from "lucide-react";
 import ThemeSelector from "./ThemeSelector";
 import LanguageSelector from "./LanguageSelector";
 import { useAuth0 } from "@auth0/auth0-react";
-import UserButton from "./UserButton";
 import { LogIn } from "lucide-react";
 import RunButton from "./RunButton";
 import { useDispatch } from "react-redux";
 import axios from "axios";
 import { setUser } from "../../../redux/userSlice";
+import { SignIn,  UserButton, SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react"
 
 // import RunButton from "./RunButton";
 // import HeaderProfileBtn from "./HeaderProfileBtn";
 
 const Header = () => {
 
-  const { user, isAuthenticated, loginWithRedirect } = useAuth0();
+  const { user, isAuthenticated } = useAuth0();
   const dispatch = useDispatch();
 
   console.log("User:", isAuthenticated, user);
@@ -36,14 +36,6 @@ const Header = () => {
     })
   }
 
-    const handleLogin = async () => {
-        try {
-          await loginWithRedirect();
-          
-        } catch (error) {
-            console.error("Login failed:", error);
-        }
-  };
   
 
   return (
@@ -125,21 +117,19 @@ const Header = () => {
 
           <div className="pl-3 border-l border-gray-800">
             {/* <HeaderProfileBtn /> */}
-            {isAuthenticated ? (
+            <SignedIn>
               <UserButton />
-            ) : (
+            </SignedIn>
+            <SignedOut>
               <>
                 <button
-                  onClick={() => handleLogin()}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-blue-800 hover:border-blue-700 bg-blue-500/80 hover:bg-blue-500 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
                 >
-                  <LogIn className="w-4 h-4 text-gray-300" />
-                  <span className="text-sm font-medium text-gray-300">
-                    Login
-                  </span>
+                  {/* <LogIn className="w-4 h-4 text-gray-300" /> */}
+                <SignInButton />
                 </button>
               </>
-            )}
+            </SignedOut>
           </div>
         </div>
       </div>

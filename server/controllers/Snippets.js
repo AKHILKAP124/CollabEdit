@@ -21,6 +21,8 @@ const createSnippet = async (req, res) => {
 };
 
 const getAllSnippets = async (req, res) => {
+  console.log("Fetching all snippets");
+  // Fetch all snippets and populate user details
   try {
     const snippets = await Snippets.find().populate(
       "user",

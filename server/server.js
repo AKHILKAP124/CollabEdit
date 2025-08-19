@@ -10,7 +10,7 @@ const app = express();
 
 // Middleware to enable CORS
 const corsOptions = {
-  origin: "http://localhost:5173", // Adjust this to your client URL
+  origin: "*", // Adjust this to your client URL
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true, // Allow credentials
   optionsSuccessStatus: 204, // For legacy browser support
