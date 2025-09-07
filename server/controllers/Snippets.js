@@ -36,7 +36,7 @@ const getAllSnippets = async (req, res) => {
 
 const getSnippetById = async (req, res) => {
   try {
-    const { sId } = req.params; 
+    const { sId } = req.params;
     console.log("Snippet ID:", sId);
     if (!sId) {
       return res.status(400).json({ message: "Snippet ID is required" });
