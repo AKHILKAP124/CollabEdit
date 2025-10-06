@@ -1,17 +1,19 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Code2, 
-  GitBranch, 
-  Layers, 
-  Plus, 
+import {
+  Code2,
+  GitBranch,
+  Layers,
+  Plus,
   TrendingUp,
   Clock,
   Users,
   Star
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { UserState } from "@/redux/slices/UserSlice";
 
 const recentPlaygrounds = [
   { id: 1, name: "React Dashboard", language: "TypeScript", lastModified: "2 hours ago", collaborators: 3 },
@@ -28,13 +30,15 @@ const stats = [
 
 export function DashboardOverview() {
   const navigate = useNavigate();
+  const userDetails = useSelector((state: { userReducer: UserState }) => state.userReducer.user);
+  console.log("User Details:", userDetails);
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Welcome Section */}
       <div className="bg-gradient-brand text-white rounded-xl p-8 shadow-glow">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Welcome back, John!</h1>
+            <h1 className="text-3xl font-bold mb-2">Welcome back, {userDetails?.fullname}</h1>
             <p className="text-white/80 text-lg">Ready to build something amazing today?</p>
           </div>
           <Button className="bg-white/20 hover:bg-white/30 text-white border-white/20">

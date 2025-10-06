@@ -1,7 +1,10 @@
 import React, { useState, forwardRef } from 'react';
 import { Eye, EyeOff, Check, X, Loader2 } from 'lucide-react';
 import { SignupFormData } from '../SignupStepper';
-import { SocialButton } from '../SocialButton';
+import { useDispatch } from 'react-redux';
+import axios from 'axios';
+import { ClearOTP, SetOTP } from '@/redux/slices/UserSlice';
+import { toast } from 'sonner';
 
 interface AccountDetailsStepProps {
   data: SignupFormData;
@@ -35,12 +38,24 @@ const checkEmailAvailability = async (email: string): Promise<boolean> => {
   });
 };
 
-const sendOtp = async (email: string): Promise<{ success: boolean; error?: string }> => {
+const sendOtp = async (email: string, otp: string): Promise<{ success: boolean; error?: string }> => {
   return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ success: true });
-    }, 1500);
+    console.log(`Sending OTP ${otp} to email: ${email}`);
+    try {
+      axios.post('/api/send-otp', { toEmail: email, otp: otp })
+        .then(response => {
+        if (response.data.success) {
+          resolve({ success: true })
+        }
+      })
+    } catch (error) {
+      resolve({ success: false, error: 'Failed to send OTP' });
+    }
   });
+};
+
+const generateOtp = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
 };
 
 export const AccountDetailsStep = forwardRef<HTMLInputElement, AccountDetailsStepProps>(
@@ -51,9 +66,11 @@ export const AccountDetailsStep = forwardRef<HTMLInputElement, AccountDetailsSte
     const [isLoading, setIsLoading] = useState(false);
     const [emailChecking, setEmailChecking] = useState(false);
 
-    const validateField = (name: keyof SignupFormData, value: any): string | undefined => {
-      switch (name) {
-        case 'name':
+    const dispatch = useDispatch();
+
+    const validateField = (fullname: keyof SignupFormData, value): string | undefined => {
+      switch (fullname) {
+        case 'fullname':
           if (!value || value.length < 2) return 'Name must be at least 2 characters';
           break;
         case 'email':
@@ -102,7 +119,7 @@ export const AccountDetailsStep = forwardRef<HTMLInputElement, AccountDetailsSte
 
       // Validate all fields
       const newErrors: ValidationErrors = {};
-      const fieldsToValidate: (keyof SignupFormData)[] = ['name', 'email', 'password', 'confirmPassword', 'acceptTerms'];
+      const fieldsToValidate: (keyof SignupFormData)[] = ['fullname', 'email', 'password', 'confirmPassword', 'acceptTerms'];
 
       fieldsToValidate.forEach(field => {
         const error = validateField(field, data[field]);
@@ -117,29 +134,25 @@ export const AccountDetailsStep = forwardRef<HTMLInputElement, AccountDetailsSte
       setIsLoading(true);
 
       try {
-        const result = await sendOtp(data.email);
+        const otp = generateOtp();
+        dispatch(SetOTP(otp));
+        const result = await sendOtp(data.email, otp);
         if (result.success) {
+          toast.success('OTP sent successfully');
           onNext();
         } else {
           setErrors({ email: result.error || 'Failed to send OTP' });
+          dispatch(ClearOTP());
         }
       } catch (error) {
         setErrors({ email: 'Something went wrong. Please try again.' });
+        dispatch(ClearOTP());
       } finally {
         setIsLoading(false);
       }
     };
 
-    const handleSocialSignup = (provider: 'google' | 'github') => {
-      // Simulate social signup success
-      setTimeout(() => {
-        onUpdate({
-          name: provider === 'google' ? 'John Doe' : 'GitHub User',
-          email: `user@${provider}.com`
-        });
-        onNext();
-      }, 2000);
-    };
+    
 
     const getPasswordStrength = () => {
       const metRequirements = passwordRequirements.filter(req => req.test(data.password));
@@ -156,7 +169,7 @@ export const AccountDetailsStep = forwardRef<HTMLInputElement, AccountDetailsSte
     return (
       <div className="space-y-6">
         {/* Social Signup */}
-        <div className="space-y-3">
+        {/* <div className="space-y-3">
           <SocialButton
             provider="google"
             onClick={() => handleSocialSignup('google')}
@@ -176,7 +189,7 @@ export const AccountDetailsStep = forwardRef<HTMLInputElement, AccountDetailsSte
           <div className="relative flex justify-center text-sm">
             <span className="px-4 bg-card text-muted-foreground">or continue with email</span>
           </div>
-        </div>
+        </div> */}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -186,10 +199,10 @@ export const AccountDetailsStep = forwardRef<HTMLInputElement, AccountDetailsSte
             </label>
             <input
               ref={ref}
-              id="name"
-              name="name"
+              id="fullname"
+              name="fullname"
               type="text"
-              value={data.name}
+              value={data.fullname}
               onChange={handleInputChange}
               className={`w-full px-4 py-2 text-sm bg-input border rounded-sm focus:outline-none focus:ring-2 focus:ring-ring transition-colors ${errors.name ? 'border-destructive' : 'border-border'
                 }`}

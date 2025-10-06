@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, Sparkles, ArrowRight } from 'lucide-react';
 import { SignupFormData } from '../SignupStepper';
+import axios from 'axios';
 
 interface SuccessStepProps {
   data: SignupFormData;
@@ -8,34 +9,39 @@ interface SuccessStepProps {
 }
 
 // Placeholder API function
-const createAccount = async (data: SignupFormData): Promise<{ success: boolean; error?: string }> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ success: true });
-    }, 2000);
-  });
-};
+
 
 export const SuccessStep: React.FC<SuccessStepProps> = ({ data, onComplete }) => {
   const [isCreating, setIsCreating] = useState(true);
   const [created, setCreated] = useState(false);
   const [error, setError] = useState('');
 
+  const createAccount = async (data: SignupFormData) => {
+    try {
+      await axios.post('/api/auth/register', data)
+        .then((response) => {
+          if (response.status === 201) {
+            setCreated(true);
+            console.log('Account created successfully', response.data);
+          } else {
+            setError(response.data.error || 'Account creation failed');
+          }
+        })
+        .catch(() => {
+          setError('Something went wrong. Please try again.');
+        })
+        .finally(() => {
+          setIsCreating(false);
+        });
+    } catch (error: any) {
+      return { success: false, error: error.response?.data?.message || 'Signup failed' };
+    }
+  };
+
   useEffect(() => {
+    console.log(data)
     createAccount(data)
-      .then((result) => {
-        if (result.success) {
-          setCreated(true);
-        } else {
-          setError(result.error || 'Account creation failed');
-        }
-      })
-      .catch(() => {
-        setError('Something went wrong. Please try again.');
-      })
-      .finally(() => {
-        setIsCreating(false);
-      });
+
   }, [data]);
 
   const getPlanName = () => {
@@ -72,7 +78,7 @@ export const SuccessStep: React.FC<SuccessStepProps> = ({ data, onComplete }) =>
         <div className="w-16 h-16 mx-auto bg-destructive/10 rounded-full flex items-center justify-center">
           <div className="w-8 h-8 bg-destructive rounded-full" />
         </div>
-        
+
         <div className="space-y-2">
           <h3 className="text-lg font-semibold text-card-foreground">
             Something went wrong
@@ -96,7 +102,7 @@ export const SuccessStep: React.FC<SuccessStepProps> = ({ data, onComplete }) =>
         <div className="w-16 h-16 mx-auto">
           <div className="w-full h-full border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
-        
+
         <div className="space-y-2">
           <h3 className="text-lg font-semibold text-card-foreground">
             Creating your account...
@@ -118,7 +124,7 @@ export const SuccessStep: React.FC<SuccessStepProps> = ({ data, onComplete }) =>
           <CheckCircle className="w-10 h-10 text-success-foreground" />
         </div>
       </div>
-      
+
       {/* Success Message */}
       <div className="space-y-3">
         <div className="flex items-center justify-center gap-2">
@@ -138,7 +144,7 @@ export const SuccessStep: React.FC<SuccessStepProps> = ({ data, onComplete }) =>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Name:</span>
-            <span className="text-card-foreground font-medium">{data.name}</span>
+            <span className="text-card-foreground font-medium">{data.fullname}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Email:</span>

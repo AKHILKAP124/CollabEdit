@@ -9,6 +9,9 @@ import AuthModal from "@/components/AuthModal";
 
 const Index = () => {
 
+  console.log('Backend URL:', import.meta.env.REACT_APP_BACKEND_URL);
+
+
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState<'login' | 'signup'>('login');
 

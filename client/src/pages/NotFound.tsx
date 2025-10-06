@@ -19,6 +19,7 @@ const NotFound = () => {
         <a href="/" className="text-blue-500 hover:text-blue-700 underline">
           Return to Home
         </a>
+        <input type="file" name="file" id="file" webkitdirectory directory onChange={(e) => console.log(e)} />
       </div>
     </div>
   );

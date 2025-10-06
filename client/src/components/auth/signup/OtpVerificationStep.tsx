@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Loader2, ArrowLeft, RefreshCw } from 'lucide-react';
 import { SignupFormData } from '../SignupStepper';
+import { ClearOTP, SetOTP, UserState } from '@/redux/slices/UserSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'sonner';
+import axios from 'axios';
 
 interface OtpVerificationStepProps {
   email: string;
@@ -11,11 +15,11 @@ interface OtpVerificationStepProps {
 }
 
 // Placeholder API function
-const verifyOtp = async (email: string, otp: string): Promise<{ success: boolean; error?: string }> => {
+const verifyOtp = async (SendedOTP: string, otp: string): Promise<{ success: boolean; error?: string }> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       // For demo, accept "123456" as valid OTP
-      if (otp === '123456') {
+      if (otp === SendedOTP) {
         resolve({ success: true });
       } else {
         resolve({ success: false, error: 'Invalid OTP code' });
@@ -24,11 +28,19 @@ const verifyOtp = async (email: string, otp: string): Promise<{ success: boolean
   });
 };
 
-const resendOtp = async (email: string): Promise<{ success: boolean; error?: string }> => {
+const resendOtp = async (email: string, otp: string): Promise<{ success: boolean; error?: string }> => {
   return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ success: true });
-    }, 1000);
+    console.log(`Sending OTP ${otp} to email: ${email}`);
+    try {
+      axios.post('/api/send-otp', { toEmail: email, otp: otp })
+        .then(response => {
+          if (response.data.success) {
+            resolve({ success: true })
+          }
+        })
+    } catch (error) {
+      resolve({ success: false, error: 'Failed to send OTP' });
+    }
   });
 };
 
@@ -45,6 +57,9 @@ export const OtpVerificationStep: React.FC<OtpVerificationStepProps> = ({
   const [resendLoading, setResendLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const SendedOTP = useSelector((state: { userReducer: UserState }) => state.userReducer.otp);
+  const dispatch = useDispatch();
 
   // Initialize cooldown
   useEffect(() => {
@@ -70,6 +85,8 @@ export const OtpVerificationStep: React.FC<OtpVerificationStepProps> = ({
         newValues[index + i] = pastedValue[i];
       }
       setOtpValues(newValues);
+
+      
       
       // Focus last filled input
       const lastFilledIndex = Math.min(index + pastedValue.length - 1, 5);
@@ -122,9 +139,10 @@ export const OtpVerificationStep: React.FC<OtpVerificationStepProps> = ({
     setError('');
 
     try {
-      const result = await verifyOtp(email, otpString);
+      const result = await verifyOtp(SendedOTP, otpString);
       
       if (result.success) {
+        dispatch(ClearOTP());
         onNext();
       } else {
         setError(result.error || 'Invalid OTP code');
@@ -138,12 +156,16 @@ export const OtpVerificationStep: React.FC<OtpVerificationStepProps> = ({
 
   const handleResendOtp = async () => {
     if (resendCooldown > 0) return;
-    
     setResendLoading(true);
-    
+
+    dispatch(ClearOTP());
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // Generate new OTP
+    dispatch(SetOTP(otp));
     try {
-      const result = await resendOtp(email);
+      const result = await resendOtp(email, otp);
       if (result.success) {
+        toast.success('OTP resend successfully');
         setResendCooldown(60);
         setOtpValues(['', '', '', '', '', '']);
         setError('');
@@ -152,9 +174,14 @@ export const OtpVerificationStep: React.FC<OtpVerificationStepProps> = ({
         inputRefs.current[0]?.focus();
       } else {
         setError(result.error || 'Failed to resend OTP');
+        dispatch(ClearOTP());
+        setResendLoading(false)
       }
     } catch (error) {
       setError('Something went wrong. Please try again.');
+      dispatch(ClearOTP());
+      setResendLoading(false)
+
     } finally {
       setResendLoading(false);
     }
@@ -226,11 +253,11 @@ export const OtpVerificationStep: React.FC<OtpVerificationStepProps> = ({
         </div>
 
         {/* Demo Helper */}
-        <div className="p-3 bg-muted/50 rounded-lg text-center">
+        {/* <div className="p-3 bg-muted/50 rounded-lg text-center">
           <p className="text-sm text-muted-foreground">
             <strong>Demo:</strong> Use code <code className="px-1 py-0.5 bg-muted rounded text-xs">123456</code> to continue
           </p>
-        </div>
+        </div> */}
 
         {/* Action Buttons */}
         <div className="flex gap-3">

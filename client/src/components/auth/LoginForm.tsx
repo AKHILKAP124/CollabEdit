@@ -1,7 +1,11 @@
-import React, { useState, forwardRef } from 'react';
+import React, { useState, forwardRef, useEffect } from 'react';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { SocialButton } from './SocialButton';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'sonner';
+import { useDispatch } from 'react-redux';
+import { login } from '@/redux/slices/UserSlice';
 
 interface LoginFormProps {
   onSuccess: () => void;
@@ -19,16 +23,24 @@ interface LoginErrors {
 }
 
 // Placeholder API function
-const loginUser = async (data: LoginData): Promise<{ success: boolean; error?: string }> => {
-  // Simulate API call
+const loginUser = async (data: LoginData): Promise<{ success: boolean; error?: string, user: object }> => {
+
   return new Promise((resolve) => {
-    setTimeout(() => {
-      if (data.email === 'test@example.com' && data.password === 'password') {
-        resolve({ success: true });
+  try {
+    axios.post(`/api/auth/login`, data).then(response => {
+      console.log('Login response:', response);
+      if (response?.data?.success) {
+        toast.success('Login successful');
+        localStorage.setItem('accessToken', response?.data?.data?.accessToken);
+        resolve({ success: true, user: response?.data?.data?.user });
       } else {
-        resolve({ success: false, error: 'Invalid email or password' });
+        resolve({ success: false, user: null, error: response.data.message || 'Login failed' });
       }
-    }, 1500);
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    return { success: false, error: 'Login failed' };
+    }
   });
 };
 
@@ -37,7 +49,21 @@ export const LoginForm = forwardRef<HTMLInputElement, LoginFormProps>(({ onSucce
   const [errors, setErrors] = useState<LoginErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const rememberMeRef = React.useRef<HTMLInputElement>(null);
+
+
+  useEffect(() => {
+    const remembered = localStorage.getItem("rememberMe");
+    if (remembered) {
+      setFormData(JSON.parse(remembered));
+      rememberMeRef.current!.checked = true;
+    }
+  }, []);
+
+ 
 
   const validateField = (name: keyof LoginData, value: string): string | undefined => {
     switch (name) {
@@ -81,10 +107,17 @@ export const LoginForm = forwardRef<HTMLInputElement, LoginFormProps>(({ onSucce
 
     try {
       const result = await loginUser(formData);
-      
       if (result.success) {
         onSuccess();
+        const loginData = {
+          isLoggedIn: true,
+          user: result?.user
+        }
+        dispatch(login(loginData));
         navigate('/dashboard');
+        if (rememberMe) {
+          localStorage.setItem("rememberMe", JSON.stringify(formData));
+        }
       } else {
         setErrors({ general: result.error || 'Login failed' });
       }
@@ -195,7 +228,7 @@ export const LoginForm = forwardRef<HTMLInputElement, LoginFormProps>(({ onSucce
 
         <div className="flex items-center justify-between text-sm">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" className="rounded border-border" />
+            <input ref={rememberMeRef} type="checkbox" className="rounded border-border" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRememberMe(true)} />
             <span className="text-muted-foreground">Remember me</span>
           </label>
           <button

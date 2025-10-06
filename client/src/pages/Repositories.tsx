@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  GitBranch, 
-  Plus, 
+import {
+  GitBranch,
+  Plus,
   Search,
   Star,
   GitFork,
@@ -19,47 +19,47 @@ import {
 } from "lucide-react";
 
 const repositories = [
-  { 
-    id: 1, 
-    name: "react-dashboard", 
+  {
+    id: 1,
+    name: "react-dashboard",
     description: "Modern React dashboard with TypeScript and Tailwind",
-    language: "TypeScript", 
+    language: "TypeScript",
     stars: 24,
     forks: 8,
-    lastUpdated: "2 hours ago", 
+    lastUpdated: "2 hours ago",
     isPublic: true,
     owner: "john-doe"
   },
-  { 
-    id: 2, 
-    name: "vue-components", 
+  {
+    id: 2,
+    name: "vue-components",
     description: "Reusable Vue.js component library",
-    language: "JavaScript", 
+    language: "JavaScript",
     stars: 12,
     forks: 3,
-    lastUpdated: "1 day ago", 
+    lastUpdated: "1 day ago",
     isPublic: false,
     owner: "john-doe"
   },
-  { 
-    id: 3, 
-    name: "api-gateway", 
+  {
+    id: 3,
+    name: "api-gateway",
     description: "Microservices API gateway with Node.js",
-    language: "JavaScript", 
+    language: "JavaScript",
     stars: 45,
     forks: 15,
-    lastUpdated: "3 days ago", 
+    lastUpdated: "3 days ago",
     isPublic: true,
     owner: "john-doe"
   },
-  { 
-    id: 4, 
-    name: "mobile-app", 
+  {
+    id: 4,
+    name: "mobile-app",
     description: "Cross-platform mobile application",
-    language: "TypeScript", 
+    language: "TypeScript",
     stars: 8,
     forks: 2,
-    lastUpdated: "1 week ago", 
+    lastUpdated: "1 week ago",
     isPublic: false,
     owner: "john-doe"
   },
@@ -67,12 +67,34 @@ const repositories = [
 
 const Repositories = () => {
   const [filter, setFilter] = useState("all");
-  
+
   const filteredRepos = repositories.filter(repo => {
     if (filter === "public") return repo.isPublic;
     if (filter === "private") return !repo.isPublic;
     return true;
   });
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    for (const file of Array.from(files)) {
+      console.log("File Name:", file.name);
+      console.log("Relative Path:", (file as any).webkitRelativePath);
+
+      // Read file contents
+      const text = await file.text(); // if it's a text-based file
+      console.log("Content:", text);
+
+      // If it's binary (e.g., image/pdf)
+      const reader = new FileReader();
+      reader.onload = () => {
+        console.log("Binary/URL Data:", reader.result);
+      };
+      reader.readAsDataURL(file); // base64 string
+    }
+  };
+
 
   return (
     <DashboardLayout>
@@ -83,7 +105,7 @@ const Repositories = () => {
             <h1 className="text-3xl font-bold">Repositories</h1>
             <p className="text-muted-foreground">Manage your code repositories and collaborate with others</p>
           </div>
-          <Button 
+          <Button
             className="bg-gradient-brand text-white"
             onClick={() => {
               const event = new CustomEvent('openCreateModal', { detail: { type: 'project' } });
@@ -93,6 +115,7 @@ const Repositories = () => {
             <Plus className="w-4 h-4 mr-2" />
             New Repository
           </Button>
+          <input type="file" name="file" id="file" onChange={handleChange} className="hidde" {...{ webkitdirectory: "true", directory: "true" }} />
         </div>
 
         {/* Controls */}
@@ -165,9 +188,9 @@ const Repositories = () => {
         {/* Repositories List */}
         <div className="space-y-4">
           {filteredRepos.map((repo, index) => (
-            <Card 
-              key={repo.id} 
-              className="group hover:shadow-lg transition-all cursor-pointer animate-slide-up bg-gradient-surface" 
+            <Card
+              key={repo.id}
+              className="group hover:shadow-lg transition-all cursor-pointer animate-slide-up bg-gradient-surface"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <CardHeader>

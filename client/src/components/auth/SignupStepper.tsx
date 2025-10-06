@@ -11,7 +11,7 @@ interface SignupStepperProps {
 }
 
 export interface SignupFormData {
-  name: string;
+  fullname: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -32,7 +32,7 @@ const steps = [
 export const SignupStepper = forwardRef<HTMLInputElement, SignupStepperProps>(({ onSuccess }, ref) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<SignupFormData>({
-    name: '',
+    fullname: '',
     email: '',
     password: '',
     confirmPassword: '',

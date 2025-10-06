@@ -12,30 +12,42 @@ import Playgrounds from "./pages/Playgrounds";
 import Repositories from "./pages/Repositories";
 import Snippets from "./pages/Snippets";
 import AIGenerator from "./pages/AIGenerator";
+import { store, persistor } from "./redux/ConfigureStore";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+import PreventToLandingPage from "./lib/PreventToLandingPage";
+import FileTest from "./pages/FileTest";
+import { CodeEditorPage } from "./pages/CodeEditorPage";
+import ProtectedRoute from "./lib/ProtectedRoutes";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="dark" storageKey="codeeditor-theme">
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/playgrounds" element={<Playgrounds />} />
-            <Route path="/playground/:id" element={<Playground />} />
-                        <Route path="/repositories" element={<Repositories />} />
-                        <Route path="/snippets" element={<Snippets />} />
-                        <Route path="/ai-generator" element={<AIGenerator />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+  <Provider store={store}>
+    <PersistGate loading={null} persistor={persistor}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="dark" storageKey="codeeditor-theme">
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<PreventToLandingPage children={<Index />} />} />
+                <Route path="/dashboard" element={<ProtectedRoute children={<Dashboard />} />} />
+                <Route path="/playgrounds" element={<ProtectedRoute children={<Playgrounds />} />} />
+                <Route path="/playground/:id" element={<ProtectedRoute children={<Playground />} />} />
+                <Route path="/repositories" element={<ProtectedRoute children={<Repositories />} />} />
+                <Route path="/snippets" element={<ProtectedRoute children={<Snippets />} />} />
+                <Route path="/test" element={<ProtectedRoute children={<CodeEditorPage />} />} />
+                <Route path="/ai-generator" element={<ProtectedRoute children={<AIGenerator />} />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </PersistGate>
+  </Provider>
 );
 
 export default App;

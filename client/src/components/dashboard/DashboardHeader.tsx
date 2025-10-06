@@ -3,9 +3,43 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import ThemeToogle from "@/components/ui/ThemeToogle";
+import { useDispatch } from "react-redux";
+import { logout } from "@/redux/slices/UserSlice";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import api from "@/services/api";
 
 export function DashboardHeader() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
+  const handlelogout = async () => {
+
+    try {
+     await api.post('/auth/logout')
+      .then((response) => {
+        if (response?.data?.success) {
+          dispatch(logout());
+          navigate('/');
+          localStorage.removeItem("accessToken");
+          toast({
+            title: "Logged out",
+            description: ("You have been logged out successfully."),
+          })
+        }
+      })
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast({
+        title: "Logout failed",
+        description: "Logout failed. Please try again.",
+        variant: "destructive",
+      })
+      return;
+    }
+    
+  }
   return (
     <header className="h-16 border-b bg-card/50 backdrop-blur-sm flex items-center px-6 gap-4">
       <SidebarTrigger />
@@ -32,7 +66,7 @@ export function DashboardHeader() {
         </Button>
 
         {/* Profile Avatar */}
-        <div className="w-8 h-8 bg-gradient-purple rounded-full flex items-center justify-center cursor-pointer">
+        <div onClick={handlelogout} className="w-8 h-8 bg-gradient-purple rounded-full flex items-center justify-center cursor-pointer">
           <span className="text-xs font-semibold text-white">JD</span>
         </div>
       </div>
